@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#1A1612" />
+  <title>武汉土著美食地图</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    :root {
+      --ink: #1A1612;
+      --muted: #6B635A;
+      --line: #E6DFD4;
+      --bg: #FAF6F0;
+      --paper: #FFFCF8;
+      --accent: #C23A2B;
+      --expo: #1F6B5A;
+      --chip: #F1EAE0;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font-family: "PingFang SC", "Noto Sans SC", "Source Han Sans SC", system-ui, sans-serif; }
+    #map { position: absolute; inset: 0 0 42% 0; }
+    .sheet {
+      position: absolute; left: 0; right: 0; bottom: 0; height: 42%;
+      background: var(--paper); border-radius: 18px 18px 0 0;
+      box-shadow: 0 -8px 28px rgba(26,22,18,.12);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .grab { width: 40px; height: 4px; background: #D8D0C6; border-radius: 99px; margin: 8px auto 0; flex: none; }
+    header.top {
+      padding: 6px 16px 10px;
+      border-bottom: 1px solid var(--line);
+      flex: none;
+    }
+    h1 { margin: 0; font-size: 18px; letter-spacing: .02em; font-weight: 650; }
+    .sub { margin: 2px 0 0; font-size: 12px; color: var(--muted); line-height: 1.45; }
+    .chips { display: flex; gap: 8px; overflow-x: auto; padding: 8px 16px 6px; flex: none; scrollbar-width: none; }
+    .chips::-webkit-scrollbar { display: none; }
+    .chip {
+      flex: none; border: 0; background: var(--chip); color: var(--ink);
+      border-radius: 999px; padding: 7px 12px; font-size: 13px; font-weight: 550;
+    }
+    .chip.on { background: var(--ink); color: #fff; }
+    .list { flex: 1; overflow: auto; padding: 4px 12px 24px; }
+    .cluster { margin: 10px 4px 4px; }
+    .cluster h2 { margin: 0; font-size: 14px; font-weight: 650; }
+    .cluster p { margin: 2px 0 8px; font-size: 12px; color: var(--muted); }
+    .row {
+      display: grid; grid-template-columns: 1fr auto; gap: 8px 10px;
+      align-items: start; padding: 10px 8px; border-top: 1px solid var(--line);
+    }
+    .name { font-size: 16px; font-weight: 650; line-height: 1.25; }
+    .meta { font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.45; }
+    .note { font-size: 11px; color: #8A4B16; margin-top: 3px; line-height: 1.4; }
+    .acts { display: flex; flex-direction: column; gap: 6px; }
+    .btn {
+      display: inline-block; text-decoration: none; text-align: center;
+      background: var(--accent); color: #fff; border-radius: 10px;
+      padding: 8px 10px; font-size: 12px; font-weight: 650; min-width: 72px;
+    }
+    .btn.ghost { background: var(--chip); color: var(--ink); }
+    .fab {
+      position: absolute; right: 12px; bottom: calc(42% + 14px);
+      width: 42px; height: 42px; border: 0; border-radius: 12px;
+      background: #fff; color: var(--ink); box-shadow: 0 4px 16px rgba(0,0,0,.16);
+      font-size: 18px;
+    }
+    .leaflet-popup-content-wrapper { border-radius: 12px; }
+    .leaflet-popup-content { margin: 10px 12px; font-size: 13px; }
+    .popup-name { font-weight: 700; font-size: 15px; }
+    .popup a { color: var(--accent); font-weight: 650; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <button class="fab" id="loc" title="定位">◎</button>
+  <section class="sheet">
+    <div class="grab"></div>
+    <header class="top">
+      <h1>武汉土著美食地图</h1>
+      <p class="sub">视频地址卡 22 家，按片区分线。不必一天吃完（原片是 72 小时逛吃）。起点按你现在的展馆：武汉国际博览中心。</p>
+    </header>
+    <div class="chips" id="chips"></div>
+    <div class="list" id="list"></div>
+  </section>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const SHOPS = [
+      {"id":"lijiji","name":"李记鸡冠饺（山海关路店）","addr":"武汉市江岸区中山大道1476号","poi_addr":"中山大道1476号","area":"山海关路过早","dish":"鸡冠饺","district":"江岸","meal":"过早","lng":114.3073571,"lat":30.6039261,"ref":false,"note":""},
+      {"id":"maoshi","name":"毛氏汽水包（山海关店）","addr":"武汉市江岸区山海关路13号","poi_addr":"山海关路13号","area":"山海关路过早","dish":"汽水包","district":"江岸","meal":"过早","lng":114.3077704,"lat":30.6033371,"ref":false,"note":""},
+      {"id":"sunshi","name":"孙氏豆皮","addr":"武汉市江岸区山海关路12号","poi_addr":"江岸区山海关路12号","area":"山海关路过早","dish":"三鲜豆皮","district":"江岸","meal":"过早","lng":114.3080322,"lat":30.6035169,"ref":false,"note":""},
+      {"id":"yanshi","name":"严氏燒卖","addr":"武汉市江岸区中山大道1498号","poi_addr":"中山大道1498号","area":"山海关路过早","dish":"重油烧麦","district":"江岸","meal":"过早","lng":114.3075699,"lat":30.604234,"ref":false,"note":""},
+      {"id":"xushi","name":"徐氏糯米包油条","addr":"江岸区山海关路30号","poi_addr":"江岸区山海关路30号（山海关店）","area":"山海关路过早","dish":"糯米包油条","district":"江岸","meal":"过早","lng":114.3077159,"lat":30.6036996,"ref":false,"note":""},
+      {"id":"wangji","name":"汪记鲜鱼糊汤粉","addr":"江岸区中山大道1504号","poi_addr":"中山大道1504号","area":"山海关路过早","dish":"糊汤粉","district":"江岸","meal":"过早","lng":114.307647,"lat":30.6044159,"ref":false,"note":""},
+      {"id":"maku","name":"MAKU CAKE","addr":"武汉市江岸区中山大道1610号","poi_addr":"江岸区中山大道1608号（中百罗森隔壁）","area":"武汉天地一带","dish":"面包／蛋糕","district":"江岸","meal":"下午茶","lng":114.3093715,"lat":30.6071222,"ref":false,"note":"地图现名 MAKU BAKERY，地址中山大道1608号（中百罗森隔壁）；视频地址卡写的是1610号，按现门店定位。"},
+      {"id":"firedoor","name":"火门美式烤肉（武汉天地店）","addr":"武汉市江岸区芦沟桥路56号","poi_addr":"永清街道芦沟桥路68号","area":"武汉天地一带","dish":"美式烤肉","district":"江岸","meal":"正餐","lng":114.3102404,"lat":30.6073422,"ref":false,"note":"视频地址卡写芦沟桥路56号，地图现为68号，同在武汉天地一带。"},
+      {"id":"burger393","name":"393 BURGER","addr":"武汉市江岸区胜利街359号附1号","poi_addr":"胜利街359-10号","area":"武汉天地一带","dish":"汉堡","district":"江岸","meal":"正餐","lng":114.3103658,"lat":30.606121,"ref":false,"note":""},
+      {"id":"jiushugong","name":"九叔公海南鸡饭","addr":"武汉市江岸区胜利街347附17号","poi_addr":"胜利街附347-15","area":"武汉天地一带","dish":"海南鸡饭","district":"江岸","meal":"正餐","lng":114.3096647,"lat":30.6054041,"ref":false,"note":""},
+      {"id":"haoke","name":"浩克肉铺","addr":"武汉市江岸区沈阳路1号附2号","poi_addr":"沈阳路1附2号","area":"武汉天地一带","dish":"牛排","district":"江岸","meal":"正餐","lng":114.3089663,"lat":30.6035818,"ref":false,"note":""},
+      {"id":"huiwei","name":"回味黑鸭煲","addr":"武汉市江汉区新华小路72号4栋","poi_addr":"新华街道新华小路72号4栋1层102、103、105","area":"万松园／振兴路","dish":"黑鸭煲","district":"江汉","meal":"正餐","lng":114.2709451,"lat":30.5929698,"ref":false,"note":""},
+      {"id":"abao","name":"阿宝生煎包","addr":"武汉市江汉区振兴路与振兴二路交叉口西40米","poi_addr":"振兴路与振兴二路交叉口西40米","area":"万松园／振兴路","dish":"生煎","district":"江汉","meal":"小吃","lng":114.2475717,"lat":30.6070306,"ref":false,"note":""},
+      {"id":"jinyan","name":"万松园金焱·牛肉粉大王","addr":"武汉市江汉区汉口万松园小区雪松路30号","poi_addr":"雪松路万松小区37栋1层101室","area":"万松园／振兴路","dish":"牛肉粉","district":"江汉","meal":"正餐","lng":114.2674074,"lat":30.5921755,"ref":false,"note":""},
+      {"id":"chilang","name":"赤浪川菜馆","addr":"武汉市江汉区妙墩横路赤浪川菜馆","poi_addr":"妙墩横路荣泰小区8号","area":"万松园／振兴路","dish":"川菜（回锅肉等）","district":"江汉","meal":"正餐","lng":114.2615758,"lat":30.5911484,"ref":false,"note":""},
+      {"id":"zengshi","name":"曾氏兄弟拉面馆","addr":"武汉市汉阳区麒麟社区东北1门旁","poi_addr":"汉阳大道617号","area":"汉阳近展馆","dish":"牛肉拉面（小碗17／大碗18）","district":"汉阳","meal":"正餐","lng":114.2265354,"lat":30.5572686,"ref":false,"note":""},
+      {"id":"cuicui","name":"翠翠家常菜","addr":"武汉市武昌区杨园街电力新村社区西北4门旁","poi_addr":"湖北省武汉市武昌区杨园街道和平大道729号电力新村社区27栋","area":"武昌杨园","dish":"鳝鱼烧田鸡、藕汤等鄂菜","district":"武昌","meal":"正餐","lng":114.3431847,"lat":30.5993294,"ref":false,"note":""},
+      {"id":"qige","name":"柒個蛋烘糕","addr":"武汉市武昌区粮道街224号1单元-6号","poi_addr":"朱家巷粮道街248号附6（武汉中学斜对面）","area":"粮道街","dish":"牛肉馅蛋烘糕","district":"武昌","meal":"小吃","lng":114.3124747,"lat":30.546939,"ref":false,"note":"视频地址卡写粮道街224号，地图现为粮道街248号附6（武汉中学斜对面），按现门店定位。"},
+      {"id":"tuoshifu","name":"妥师傅馄饨","addr":"武汉市武昌区花堤街36号附一","poi_addr":"湖北省武汉市武昌区黄鹤楼街道花堤街36号附1","area":"花堤街","dish":"黑松露馄饨、皮蛋肉馄饨","district":"武昌","meal":"正餐","lng":114.2930521,"lat":30.5372427,"ref":false,"note":""},
+      {"id":"nieshifu","name":"聂师傅油焖大虾","addr":"武汉市江岸区台北一路与高雄路交叉口西北50米","poi_addr":"台北一路招银苑3号楼1层D-2室","area":"台北路一带","dish":"油焖大虾配拌面","district":"江岸","meal":"正餐","lng":114.2862475,"lat":30.5948771,"ref":false,"note":""},
+      {"id":"haoyun","name":"蚝运·年年烧烤","addr":"武汉市江汉区振兴路193号","poi_addr":"江汉区振兴路193号","area":"万松园／振兴路","dish":"牛肉串、鱿鱼、鸡架","district":"江汉","meal":"夜宵","lng":114.2471849,"lat":30.6068833,"ref":false,"note":"视频店名是蚝运·年年烧烤，地址振兴路193号；地图现显示为「蟹神·咩咩特色海鲜(复兴村烟火巷店)」。定位按该地址。"},
+      {"id":"yangmei","name":"杨妹生烫牛杂馆","addr":"武汉市江岸区解放大道780号1楼4号门面","poi_addr":"湖北省武汉市江岸区四唯街道解放大道1256号1楼1号门面(解放中学对面)","area":"解放大道","dish":"生烫牛杂、蛋白烧牛筋","district":"江岸","meal":"正餐","lng":114.3026674,"lat":30.6029605,"ref":false,"note":"视频地址卡写解放大道780号，百度地图当前是解放大道1256号（解放中学对面）。定位按地图现条目，到了请再确认门牌。"},
+      {"id":"cimp","name":"武汉国际博览中心（CIMP 展馆）","addr":"武汉市汉阳区鹦鹉大道619号","poi_addr":"湖北省武汉市汉阳区洲头街道鹦鹉大道619号","area":"展馆","dish":"","district":"汉阳","meal":"","lng":114.2419588,"lat":30.506836,"ref":true,"note":""}
+    ];
+
+    const CLUSTERS = [
+      {id:"all", name:"全部", hint:"", ids:null},
+      {id:"hanyang", name:"汉阳近展馆", hint:"展间最近一顿，不过江，约 5.8 公里", ids:["zengshi"]},
+      {id:"wuchang-near", name:"武昌近处", hint:"过江最近：妥师傅约 5.9 公里，粮道街约 8 公里，可同一趟。粮道街还有整街小吃，这里只钉了视频主推的柒個蛋烘糕", ids:["tuoshifu","qige"]},
+      {id:"wansong", name:"万松园／振兴路", hint:"下午到夜宵，约 10–11 公里", ids:["chilang","jinyan","huiwei","haoyun","abao"]},
+      {id:"jiangan-dinner", name:"江岸晚饭", hint:"聂师傅约 11 公里；杨妹其实紧挨山海关路，晚饭可顺路", ids:["nieshifu","yangmei"]},
+      {id:"breakfast", name:"山海关路过早", hint:"一条街可走完，过江约 12.5 公里", ids:["lijiji","yanshi","wangji","maoshi","sunshi","xushi"]},
+      {id:"tiandi", name:"武汉天地／胜利街", hint:"紧挨山海关路，过早后顺路", ids:["haoke","jiushugong","burger393","maku","firedoor"]},
+      {id:"yangyuan", name:"武昌杨园", hint:"较偏，约 14 公里，单独安排", ids:["cuicui"]}
+    ];
+
+    const CIMP = SHOPS.find(s => s.id === "cimp");
+
+    function hav(a, b) {
+      const R = 6371, toR = x => x * Math.PI / 180;
+      const dLat = toR(b.lat - a.lat), dLng = toR(b.lng - a.lng);
+      const u = Math.sin(dLat/2)**2 + Math.cos(toR(a.lat))*Math.cos(toR(b.lat))*Math.sin(dLng/2)**2;
+      return 2 * R * Math.asin(Math.sqrt(u));
+    }
+    function km(s) { return hav(CIMP, s).toFixed(1); }
+    function shortName(n) { return n.replace(/（.*?）/g, "").replace(/[;,]/g, " "); }
+    function markerUrl(s) {
+      return `https://uri.amap.com/marker?position=${s.lng},${s.lat}&name=${encodeURIComponent(shortName(s.name))}&coordinate=gaode&callnative=1`;
+    }
+    function navUrl(s) {
+      return `https://uri.amap.com/navigation?from=${CIMP.lng},${CIMP.lat},${encodeURIComponent("武汉国际博览中心")}&to=${s.lng},${s.lat},${encodeURIComponent(shortName(s.name))}&mode=car&coordinate=gaode&callnative=1`;
+    }
+    function clusterUrl(ids) {
+      const ms = ids.map(id => SHOPS.find(s => s.id === id)).filter(Boolean)
+        .map(s => `${s.lng},${s.lat},${encodeURIComponent(shortName(s.name))}`).join(";");
+      return `https://uri.amap.com/marker?markers=${ms}&coordinate=gaode&callnative=1`;
+    }
+
+    const map = L.map("map", { zoomControl: false, attributionControl: false });
+    L.control.zoom({ position: "topright" }).addTo(map);
+    const tiles = L.tileLayer("https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}", {
+      subdomains: "1234", maxZoom: 18
+    });
+    const fallback = L.tileLayer("https://map.geoq.cn/ArcGIS/rest/services/ChinaOnlineCommunity/MapServer/tile/{z}/{y}/{x}", { maxZoom: 16 });
+    let tileFailed = 0;
+    tiles.on("tileerror", () => {
+      tileFailed++;
+      if (tileFailed === 3 && !map.hasLayer(fallback)) { map.removeLayer(tiles); fallback.addTo(map); }
+    });
+    tiles.addTo(map);
+
+    function pinIcon(color, label) {
+      return L.divIcon({
+        className: "",
+        iconSize: [28, 28],
+        iconAnchor: [14, 28],
+        popupAnchor: [0, -24],
+        html: `<div style="width:28px;height:28px;border-radius:50% 50% 50% 0;background:${color};transform:rotate(-45deg);box-shadow:0 2px 6px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center"><span style="transform:rotate(45deg);color:#fff;font-size:11px;font-weight:700">${label}</span></div>`
+      });
+    }
+
+    const markers = {};
+    SHOPS.forEach(s => {
+      const icon = s.ref ? pinIcon("#1F6B5A", "展") : pinIcon("#C23A2B", "吃");
+      const m = L.marker([s.lat, s.lng], { icon, zIndexOffset: s.ref ? 200 : 0 }).addTo(map);
+      const extra = s.note ? `<div style="color:#8A4B16;font-size:11px;margin-top:4px">${s.note}</div>` : "";
+      const dish = s.dish ? `<div style="color:#6B635A">${s.dish}</div>` : "";
+      m.bindPopup(`<div class="popup-name">${s.name}</div>${dish}<div style="color:#6B635A;margin:2px 0 6px">距展馆 ${km(s)} 公里<br>${s.poi_addr || s.addr}</div>${extra}<a href="${markerUrl(s)}">打开高德</a> · <a href="${navUrl(s)}">导航</a>`);
+      m.on("click", () => { document.getElementById("row-"+s.id)?.scrollIntoView({behavior:"smooth", block:"nearest"}); });
+      markers[s.id] = m;
+    });
+
+    const allFood = SHOPS.filter(s => !s.ref);
+    map.fitBounds(L.latLngBounds(SHOPS.map(s => [s.lat, s.lng])), { padding: [30, 30] });
+
+    let active = "all";
+    const chips = document.getElementById("chips");
+    const list = document.getElementById("list");
+
+    function showCluster(id) {
+      active = id;
+      [...chips.children].forEach(c => c.classList.toggle("on", c.dataset.id === id));
+      const cl = CLUSTERS.find(c => c.id === id);
+      const ids = cl.ids;
+      Object.entries(markers).forEach(([sid, m]) => {
+        const on = sid === "cimp" || !ids || ids.includes(sid);
+        if (on) { if (!map.hasLayer(m)) m.addTo(map); }
+        else if (map.hasLayer(m)) map.removeLayer(m);
+      });
+      const focus = (ids ? ids.map(i => SHOPS.find(s => s.id === i)) : SHOPS).filter(Boolean);
+      if (focus.length) map.fitBounds(L.latLngBounds(focus.map(s => [s.lat, s.lng])), { padding: [40, 40], maxZoom: 16 });
+      renderList();
+    }
+
+    function renderList() {
+      const html = [];
+      const visible = active === "all" ? CLUSTERS.filter(c => c.id !== "all") : CLUSTERS.filter(c => c.id === active);
+      visible.forEach(cl => {
+        const shops = cl.ids.map(i => SHOPS.find(s => s.id === i)).filter(Boolean);
+        html.push(`<div class="cluster"><h2>${cl.name}</h2><p>${cl.hint} <a class="inline" href="${clusterUrl(cl.ids)}" style="color:#C23A2B;font-weight:650;text-decoration:none">打开这一片</a></p>`);
+        shops.forEach(s => {
+          html.push(`<div class="row" id="row-${s.id}">
+            <div>
+              <div class="name">${s.name}</div>
+              <div class="meta">${s.dish ? s.dish + " · " : ""}距展馆 ${km(s)} 公里<br>${s.poi_addr || s.addr}</div>
+              ${s.note ? `<div class="note">${s.note}</div>` : ""}
+            </div>
+            <div class="acts">
+              <a class="btn" href="${markerUrl(s)}">打开高德</a>
+              <a class="btn ghost" href="${navUrl(s)}">从展馆导航</a>
+            </div>
+          </div>`);
+        });
+        html.push("</div>");
+      });
+      list.innerHTML = html.join("");
+      list.querySelectorAll(".row").forEach(el => {
+        el.addEventListener("click", e => {
+          if (e.target.closest("a")) return;
+          const id = el.id.replace("row-", "");
+          const s = SHOPS.find(x => x.id === id);
+          if (s) { map.setView([s.lat, s.lng], 17); markers[id].openPopup(); }
+        });
+      });
+    }
+
+    CLUSTERS.forEach(cl => {
+      const b = document.createElement("button");
+      b.className = "chip" + (cl.id === "all" ? " on" : "");
+      b.dataset.id = cl.id;
+      b.textContent = cl.name;
+      b.onclick = () => showCluster(cl.id);
+      chips.appendChild(b);
+    });
+    renderList();
+
+    document.getElementById("loc").onclick = () => {
+      if (!navigator.geolocation) return;
+      navigator.geolocation.getCurrentPosition(pos => {
+        // 浏览器给的是 WGS84，武汉偏差约几百米；只作概略定位
+        const lat = pos.coords.latitude, lng = pos.coords.longitude;
+        L.circleMarker([lat, lng], { radius: 8, color: "#1F6B5A", fillColor: "#1F6B5A", fillOpacity: .85, weight: 2 }).addTo(map)
+          .bindPopup("大概是你现在的位置（未做坐标纠偏，可能偏一点点）").openPopup();
+        map.setView([lat, lng], 14);
+      });
+    };
+  </script>
+</body>
+</html>
