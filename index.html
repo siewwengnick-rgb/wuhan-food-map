@@ -78,7 +78,7 @@
     <div class="grab"></div>
     <header class="top">
       <h1>武汉土著美食地图</h1>
-      <p class="sub">视频地址卡 22 家，按片区分线。不必一天吃完（原片是 72 小时逛吃）。起点按你现在的展馆：武汉国际博览中心。</p>
+      <p class="sub">视频地址卡 22 家，按片区分线。不必一天吃完（原片是 72 小时逛吃）。地图另钉武博展馆与武汉万象城。起点按你现在的展馆：武汉国际博览中心。</p>
     </header>
     <div class="chips" id="chips"></div>
     <div class="list" id="list"></div>
@@ -108,7 +108,8 @@
       {"id":"nieshifu","name":"聂师傅油焖大虾","addr":"武汉市江岸区台北一路与高雄路交叉口西北50米","poi_addr":"台北一路招银苑3号楼1层D-2室","area":"台北路一带","dish":"油焖大虾配拌面","district":"江岸","meal":"正餐","lng":114.2862475,"lat":30.5948771,"ref":false,"note":""},
       {"id":"haoyun","name":"蚝运·年年烧烤","addr":"武汉市江汉区振兴路193号","poi_addr":"江汉区振兴路193号","area":"万松园／振兴路","dish":"牛肉串、鱿鱼、鸡架","district":"江汉","meal":"夜宵","lng":114.2471849,"lat":30.6068833,"ref":false,"note":"视频店名是蚝运·年年烧烤，地址振兴路193号；地图现显示为「蟹神·咩咩特色海鲜(复兴村烟火巷店)」。定位按该地址。"},
       {"id":"yangmei","name":"杨妹生烫牛杂馆","addr":"武汉市江岸区解放大道780号1楼4号门面","poi_addr":"湖北省武汉市江岸区四唯街道解放大道1256号1楼1号门面(解放中学对面)","area":"解放大道","dish":"生烫牛杂、蛋白烧牛筋","district":"江岸","meal":"正餐","lng":114.3026674,"lat":30.6029605,"ref":false,"note":"视频地址卡写解放大道780号，百度地图当前是解放大道1256号（解放中学对面）。定位按地图现条目，到了请再确认门牌。"},
-      {"id":"cimp","name":"武汉国际博览中心（CIMP 展馆）","addr":"武汉市汉阳区鹦鹉大道619号","poi_addr":"湖北省武汉市汉阳区洲头街道鹦鹉大道619号","area":"展馆","dish":"","district":"汉阳","meal":"","lng":114.2419588,"lat":30.506836,"ref":true,"note":""}
+      {"id":"cimp","name":"武汉国际博览中心（CIMP 展馆）","addr":"武汉市汉阳区鹦鹉大道619号","poi_addr":"湖北省武汉市汉阳区洲头街道鹦鹉大道619号","area":"展馆","dish":"","district":"汉阳","meal":"","lng":114.2419588,"lat":30.506836,"ref":true,"note":""},
+      {"id":"mixc","name":"武汉万象城","addr":"武汉市江岸区建设大道668号","poi_addr":"武汉市江岸区建设大道668号（建设大道与台北路交会处）","area":"地标","dish":"","district":"江岸","meal":"","lng":114.280583,"lat":30.599266,"ref":true,"note":""}
     ];
 
     const CLUSTERS = [
@@ -119,7 +120,8 @@
       {id:"jiangan-dinner", name:"江岸晚饭", hint:"聂师傅约 11 公里；杨妹其实紧挨山海关路，晚饭可顺路", ids:["nieshifu","yangmei"]},
       {id:"breakfast", name:"山海关路过早", hint:"一条街可走完，过江约 12.5 公里", ids:["lijiji","yanshi","wangji","maoshi","sunshi","xushi"]},
       {id:"tiandi", name:"武汉天地／胜利街", hint:"紧挨山海关路，过早后顺路", ids:["haoke","jiushugong","burger393","maku","firedoor"]},
-      {id:"yangyuan", name:"武昌杨园", hint:"较偏，约 14 公里，单独安排", ids:["cuicui"]}
+      {id:"yangyuan", name:"武昌杨园", hint:"较偏，约 14 公里，单独安排", ids:["cuicui"]},
+      {id:"landmarks", name:"地标", hint:"武博展馆与武汉万象城，只作参照，不计入视频里的 22 家", ids:["cimp","mixc"]}
     ];
 
     const CIMP = SHOPS.find(s => s.id === "cimp");
@@ -167,13 +169,27 @@
       });
     }
 
-    const markers = {};
-    SHOPS.forEach(s => {
-      const icon = s.ref ? pinIcon("#1F6B5A", "展") : pinIcon("#C23A2B", "吃");
-      const m = L.marker([s.lat, s.lng], { icon, zIndexOffset: s.ref ? 200 : 0 }).addTo(map);
+    function pinFor(s) {
+      if (s.id === "cimp") return pinIcon("#1F6B5A", "展");
+      if (s.id === "mixc") return pinIcon("#3E4C8A", "城");
+      return pinIcon("#C23A2B", "吃");
+    }
+    function popupHtml(s) {
       const extra = s.note ? `<div style="color:#8A4B16;font-size:11px;margin-top:4px">${s.note}</div>` : "";
       const dish = s.dish ? `<div style="color:#6B635A">${s.dish}</div>` : "";
-      m.bindPopup(`<div class="popup-name">${s.name}</div>${dish}<div style="color:#6B635A;margin:2px 0 6px">距展馆 ${km(s)} 公里<br>${s.poi_addr || s.addr}</div>${extra}<a href="${markerUrl(s)}">打开高德</a> · <a href="${navUrl(s)}">导航</a>`);
+      const where = s.id === "cimp"
+        ? (s.poi_addr || s.addr)
+        : `距展馆 ${km(s)} 公里<br>${s.poi_addr || s.addr}`;
+      const links = s.id === "cimp"
+        ? `<a href="${markerUrl(s)}">打开高德</a>`
+        : `<a href="${markerUrl(s)}">打开高德</a> · <a href="${navUrl(s)}">导航</a>`;
+      return `<div class="popup-name">${s.name}</div>${dish}<div style="color:#6B635A;margin:2px 0 6px">${where}</div>${extra}${links}`;
+    }
+
+    const markers = {};
+    SHOPS.forEach(s => {
+      const m = L.marker([s.lat, s.lng], { icon: pinFor(s), zIndexOffset: s.ref ? 200 : 0 }).addTo(map);
+      m.bindPopup(popupHtml(s));
       m.on("click", () => { document.getElementById("row-"+s.id)?.scrollIntoView({behavior:"smooth", block:"nearest"}); });
       markers[s.id] = m;
     });
@@ -191,7 +207,8 @@
       const cl = CLUSTERS.find(c => c.id === id);
       const ids = cl.ids;
       Object.entries(markers).forEach(([sid, m]) => {
-        const on = sid === "cimp" || !ids || ids.includes(sid);
+        const shop = SHOPS.find(s => s.id === sid);
+        const on = shop.ref || !ids || ids.includes(sid);
         if (on) { if (!map.hasLayer(m)) m.addTo(map); }
         else if (map.hasLayer(m)) map.removeLayer(m);
       });
@@ -207,15 +224,19 @@
         const shops = cl.ids.map(i => SHOPS.find(s => s.id === i)).filter(Boolean);
         html.push(`<div class="cluster"><h2>${cl.name}</h2><p>${cl.hint} <a class="inline" href="${clusterUrl(cl.ids)}" style="color:#C23A2B;font-weight:650;text-decoration:none">打开这一片</a></p>`);
         shops.forEach(s => {
+          const meta = s.id === "cimp"
+            ? (s.poi_addr || s.addr)
+            : `${s.dish ? s.dish + " · " : ""}距展馆 ${km(s)} 公里<br>${s.poi_addr || s.addr}`;
+          const navBtn = s.id === "cimp" ? "" : `<a class="btn ghost" href="${navUrl(s)}">从展馆导航</a>`;
           html.push(`<div class="row" id="row-${s.id}">
             <div>
               <div class="name">${s.name}</div>
-              <div class="meta">${s.dish ? s.dish + " · " : ""}距展馆 ${km(s)} 公里<br>${s.poi_addr || s.addr}</div>
+              <div class="meta">${meta}</div>
               ${s.note ? `<div class="note">${s.note}</div>` : ""}
             </div>
             <div class="acts">
               <a class="btn" href="${markerUrl(s)}">打开高德</a>
-              <a class="btn ghost" href="${navUrl(s)}">从展馆导航</a>
+              ${navBtn}
             </div>
           </div>`);
         });
@@ -232,7 +253,9 @@
       });
     }
 
-    CLUSTERS.forEach(cl => {
+    const chipOrder = ["all", "landmarks", ...CLUSTERS.map(c => c.id).filter(id => id !== "all" && id !== "landmarks")];
+    chipOrder.forEach(id => {
+      const cl = CLUSTERS.find(c => c.id === id);
       const b = document.createElement("button");
       b.className = "chip" + (cl.id === "all" ? " on" : "");
       b.dataset.id = cl.id;
