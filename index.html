@@ -69,6 +69,7 @@
     .leaflet-popup-content { margin: 10px 12px; font-size: 13px; }
     .popup-name { font-weight: 700; font-size: 15px; }
     .popup a { color: var(--accent); font-weight: 650; }
+    .leaflet-div-icon.pin-wide { background: transparent; border: none; }
   </style>
 </head>
 <body>
@@ -78,7 +79,7 @@
     <div class="grab"></div>
     <header class="top">
       <h1>武汉土著美食地图</h1>
-      <p class="sub">视频地址卡 22 家，按片区分线。不必一天吃完（原片是 72 小时逛吃）。地图另钉武博展馆与武汉万象城。起点按你现在的展馆：武汉国际博览中心。</p>
+      <p class="sub">视频地址卡 22 家，按片区分线。不必一天吃完（原片是 72 小时逛吃）。地图另钉武博展馆、武汉万象城与山姆 Top 1–4，只作参照，不计入这 22 家。起点按你现在的展馆：武汉国际博览中心。</p>
     </header>
     <div class="chips" id="chips"></div>
     <div class="list" id="list"></div>
@@ -109,7 +110,11 @@
       {"id":"haoyun","name":"蚝运·年年烧烤","addr":"武汉市江汉区振兴路193号","poi_addr":"江汉区振兴路193号","area":"万松园／振兴路","dish":"牛肉串、鱿鱼、鸡架","district":"江汉","meal":"夜宵","lng":114.2471849,"lat":30.6068833,"ref":false,"note":"视频店名是蚝运·年年烧烤，地址振兴路193号；地图现显示为「蟹神·咩咩特色海鲜(复兴村烟火巷店)」。定位按该地址。"},
       {"id":"yangmei","name":"杨妹生烫牛杂馆","addr":"武汉市江岸区解放大道780号1楼4号门面","poi_addr":"湖北省武汉市江岸区四唯街道解放大道1256号1楼1号门面(解放中学对面)","area":"解放大道","dish":"生烫牛杂、蛋白烧牛筋","district":"江岸","meal":"正餐","lng":114.3026674,"lat":30.6029605,"ref":false,"note":"视频地址卡写解放大道780号，百度地图当前是解放大道1256号（解放中学对面）。定位按地图现条目，到了请再确认门牌。"},
       {"id":"cimp","name":"武汉国际博览中心（CIMP 展馆）","addr":"武汉市汉阳区鹦鹉大道619号","poi_addr":"湖北省武汉市汉阳区洲头街道鹦鹉大道619号","area":"展馆","dish":"","district":"汉阳","meal":"","lng":114.2419588,"lat":30.506836,"ref":true,"note":""},
-      {"id":"mixc","name":"武汉万象城","addr":"武汉市江岸区建设大道668号","poi_addr":"武汉市江岸区建设大道668号（建设大道与台北路交会处）","area":"地标","dish":"","district":"江岸","meal":"","lng":114.280583,"lat":30.599266,"ref":true,"note":""}
+      {"id":"mixc","name":"武汉万象城","addr":"武汉市江岸区建设大道668号","poi_addr":"武汉市江岸区建设大道668号（建设大道与台北路交会处）","area":"地标","dish":"","district":"江岸","meal":"","lng":114.280583,"lat":30.599266,"ref":true,"note":""},
+      {"id":"sams-hankou","name":"Top 1 山姆会员商店（汉口店）","addr":"武汉市硚口区解放大道387号南国西汇城市广场二期","poi_addr":"武汉市硚口区解放大道387号南国西汇城市广场二期","area":"地标","dish":"","district":"硚口","meal":"","lng":114.222394,"lat":30.584918,"ref":true,"note":"按营业面积排行第一：商场面积 2.3 万㎡（湖北日报 2026-08-13）。官方店名武汉汉口店。"},
+      {"id":"sams-guanggu","name":"Top 2 山姆会员商店（光谷店）","addr":"武汉市东湖高新区高新大道456号S2号楼（光谷上城）","poi_addr":"武汉市东湖高新区高新大道456号S2号楼（光谷上城）","area":"地标","dish":"","district":"东湖高新","meal":"","lng":114.448385,"lat":30.486884,"ref":true,"note":"按营业面积排行第二：面积约 2.2 万㎡（湖北日报 2026-08-13）。"},
+      {"id":"sams-jiangan","name":"Top 3 山姆会员商店（江岸店）","addr":"武汉市江岸区春兰街88号（星悦城四期对面，近地铁6号线杨汊湖站）","poi_addr":"武汉市江岸区春兰街88号（星悦城四期对面，近地铁6号线杨汊湖站）","area":"地标","dish":"","district":"江岸","meal":"","lng":114.263063,"lat":30.643396,"ref":true,"note":"按经营面积排行第三：约 2 万㎡。于 2025-05-28 开业。"},
+      {"id":"sams-hanyang","name":"Top 4 山姆会员商店（汉阳店）","addr":"武汉市汉阳区连通港路88号","poi_addr":"武汉市汉阳区连通港路88号","area":"地标","dish":"","district":"汉阳","meal":"","lng":114.221352,"lat":30.503547,"ref":true,"note":"按营业面积排行第四：营业面积 1.6 万㎡（长江网/武汉商务 2023-11）。不要用占地/建筑总体量约 6 万㎡排名。"}
     ];
 
     const CLUSTERS = [
@@ -121,7 +126,7 @@
       {id:"breakfast", name:"山海关路过早", hint:"一条街可走完，过江约 12.5 公里", ids:["lijiji","yanshi","wangji","maoshi","sunshi","xushi"]},
       {id:"tiandi", name:"武汉天地／胜利街", hint:"紧挨山海关路，过早后顺路", ids:["haoke","jiushugong","burger393","maku","firedoor"]},
       {id:"yangyuan", name:"武昌杨园", hint:"较偏，约 14 公里，单独安排", ids:["cuicui"]},
-      {id:"landmarks", name:"地标", hint:"武博展馆与武汉万象城，只作参照，不计入视频里的 22 家", ids:["cimp","mixc"]}
+      {id:"landmarks", name:"地标", hint:"武博展馆、武汉万象城与山姆 Top 1–4，只作参照，不计入视频里的 22 家", ids:["cimp","mixc","sams-hankou","sams-guanggu","sams-jiangan","sams-hanyang"]}
     ];
 
     const CIMP = SHOPS.find(s => s.id === "cimp");
@@ -160,6 +165,16 @@
     tiles.addTo(map);
 
     function pinIcon(color, label) {
+      if (label.length > 1) {
+        const w = 58, h = 24, tail = 7;
+        return L.divIcon({
+          className: "pin-wide",
+          iconSize: [w, h + tail],
+          iconAnchor: [w / 2, h + tail],
+          popupAnchor: [0, -(h + 2)],
+          html: `<div style="width:${w}px;height:${h + tail}px;display:flex;flex-direction:column;align-items:center;filter:drop-shadow(0 2px 3px rgba(0,0,0,.28))"><div style="width:${w}px;height:${h}px;border-radius:8px;background:${color};display:flex;align-items:center;justify-content:center"><span style="color:#fff;font-size:13px;font-weight:700;letter-spacing:.01em;line-height:1;white-space:nowrap">${label}</span></div><div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:${tail}px solid ${color};margin-top:-1px"></div></div>`
+        });
+      }
       return L.divIcon({
         className: "",
         iconSize: [28, 28],
@@ -169,9 +184,16 @@
       });
     }
 
+    const SAMS_LABEL = {
+      "sams-hankou": "Top 1",
+      "sams-guanggu": "Top 2",
+      "sams-jiangan": "Top 3",
+      "sams-hanyang": "Top 4"
+    };
     function pinFor(s) {
       if (s.id === "cimp") return pinIcon("#1F6B5A", "展");
       if (s.id === "mixc") return pinIcon("#3E4C8A", "城");
+      if (SAMS_LABEL[s.id]) return pinIcon("#8A4B08", SAMS_LABEL[s.id]);
       return pinIcon("#C23A2B", "吃");
     }
     function popupHtml(s) {
