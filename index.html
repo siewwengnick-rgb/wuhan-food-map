@@ -79,7 +79,7 @@
     <div class="grab"></div>
     <header class="top">
       <h1>武汉土著美食地图</h1>
-      <p class="sub">视频地址卡 22 家，按片区分线。不必一天吃完（原片是 72 小时逛吃）。地图另钉武博展馆、武汉万象城与山姆 Top 1–4，只作参照，不计入这 22 家。起点按你现在的展馆：武汉国际博览中心。</p>
+      <p class="sub">视频地址卡 22 家，按片区分线。不必一天吃完（原片是 72 小时逛吃）。地图另钉武博展馆、武汉万象城与山姆 Top 1–4，只作参照，不计入这 22 家。另临时钉了四家汉口候选酒店（紫色「住」，11月13–15日），稍后会拿掉。起点按你现在的展馆：武汉国际博览中心。</p>
     </header>
     <div class="chips" id="chips"></div>
     <div class="list" id="list"></div>
@@ -114,7 +114,11 @@
       {"id":"sams-hankou","name":"Top 1 山姆会员商店（汉口店）","addr":"武汉市硚口区解放大道387号南国西汇城市广场二期","poi_addr":"武汉市硚口区解放大道387号南国西汇城市广场二期","area":"地标","dish":"","district":"硚口","meal":"","lng":114.222394,"lat":30.584918,"ref":true,"note":"按营业面积排行第一：商场面积 2.3 万㎡（湖北日报 2026-08-13）。官方店名武汉汉口店。"},
       {"id":"sams-guanggu","name":"Top 2 山姆会员商店（光谷店）","addr":"武汉市东湖高新区高新大道456号S2号楼（光谷上城）","poi_addr":"武汉市东湖高新区高新大道456号S2号楼（光谷上城）","area":"地标","dish":"","district":"东湖高新","meal":"","lng":114.448385,"lat":30.486884,"ref":true,"note":"按营业面积排行第二：面积约 2.2 万㎡（湖北日报 2026-08-13）。"},
       {"id":"sams-jiangan","name":"Top 3 山姆会员商店（江岸店）","addr":"武汉市江岸区春兰街88号（星悦城四期对面，近地铁6号线杨汊湖站）","poi_addr":"武汉市江岸区春兰街88号（星悦城四期对面，近地铁6号线杨汊湖站）","area":"地标","dish":"","district":"江岸","meal":"","lng":114.263063,"lat":30.643396,"ref":true,"note":"按经营面积排行第三：约 2 万㎡。于 2025-05-28 开业。"},
-      {"id":"sams-hanyang","name":"Top 4 山姆会员商店（汉阳店）","addr":"武汉市汉阳区连通港路88号","poi_addr":"武汉市汉阳区连通港路88号","area":"地标","dish":"","district":"汉阳","meal":"","lng":114.221352,"lat":30.503547,"ref":true,"note":"按营业面积排行第四：营业面积 1.6 万㎡（长江网/武汉商务 2023-11）。不要用占地/建筑总体量约 6 万㎡排名。"}
+      {"id":"sams-hanyang","name":"Top 4 山姆会员商店（汉阳店）","addr":"武汉市汉阳区连通港路88号","poi_addr":"武汉市汉阳区连通港路88号","area":"地标","dish":"","district":"汉阳","meal":"","lng":114.221352,"lat":30.503547,"ref":true,"note":"按营业面积排行第四：营业面积 1.6 万㎡（长江网/武汉商务 2023-11）。不要用占地/建筑总体量约 6 万㎡排名。"},
+      {"id":"hotel-jingyeting","name":"静叶庭酒店（武汉江汉路步行街江滩）","addr":"武汉市江汉区江汉四路19号科技王广场1层","poi_addr":"武汉市江汉区江汉四路19号科技王广场1层","area":"暂住酒店","dish":"","district":"江汉","meal":"","lng":114.286475,"lat":30.582467,"ref":true,"note":"临时钉点，11月13–15日候选酒店，不算美食地图正式店。"},
+      {"id":"hotel-feixiang","name":"菲想酒店（武汉江汉路步行街六渡桥）","addr":"武汉市江汉区中山大道昱汇珠宝城一楼111号","poi_addr":"武汉市江汉区中山大道昱汇珠宝城一楼111号","area":"暂住酒店","dish":"","district":"江汉","meal":"","lng":114.284102,"lat":30.574535,"ref":true,"note":"临时钉点，11月13–15日候选酒店，不算美食地图正式店。"},
+      {"id":"hotel-urcove","name":"逸扉酒店（凯悦旗下，武汉国际广场江汉路）","addr":"武汉市硚口区游艺路187号奥地利广场F1层","poi_addr":"武汉市硚口区游艺路187号奥地利广场F1层","area":"暂住酒店","dish":"","district":"硚口","meal":"","lng":114.274569,"lat":30.575792,"ref":true,"note":"临时钉点，11月13–15日候选酒店，不算美食地图正式店。"},
+      {"id":"hotel-jiepai","name":"桔派S酒店（武汉江汉路步行街江滩店）","addr":"武汉市江汉区水塔街道江汉三路56号(循礼门地铁站C口步行350米)","poi_addr":"武汉市江汉区水塔街道江汉三路56号(循礼门地铁站C口步行350米)","area":"暂住酒店","dish":"","district":"江汉","meal":"","lng":114.288686,"lat":30.582757,"ref":true,"note":"临时钉点，11月13–15日候选酒店，不算美食地图正式店。"}
     ];
 
     const CLUSTERS = [
@@ -126,7 +130,8 @@
       {id:"breakfast", name:"山海关路过早", hint:"一条街可走完，过江约 12.5 公里", ids:["lijiji","yanshi","wangji","maoshi","sunshi","xushi"]},
       {id:"tiandi", name:"武汉天地／胜利街", hint:"紧挨山海关路，过早后顺路", ids:["haoke","jiushugong","burger393","maku","firedoor"]},
       {id:"yangyuan", name:"武昌杨园", hint:"较偏，约 14 公里，单独安排", ids:["cuicui"]},
-      {id:"landmarks", name:"地标", hint:"武博展馆、武汉万象城与山姆 Top 1–4，只作参照，不计入视频里的 22 家", ids:["cimp","mixc","sams-hankou","sams-guanggu","sams-jiangan","sams-hanyang"]}
+      {id:"landmarks", name:"地标", hint:"武博展馆、武汉万象城与山姆 Top 1–4，只作参照，不计入视频里的 22 家", ids:["cimp","mixc","sams-hankou","sams-guanggu","sams-jiangan","sams-hanyang"]},
+      {id:"hotels-temp", name:"暂住酒店", hint:"临时钉上，11月13–15日候选，方便对照位置；不计入视频里的 22 家，不算永久地标，稍后会拿掉。", ids:["hotel-jingyeting","hotel-feixiang","hotel-urcove","hotel-jiepai"]}
     ];
 
     const CIMP = SHOPS.find(s => s.id === "cimp");
@@ -194,6 +199,7 @@
       if (s.id === "cimp") return pinIcon("#1F6B5A", "展");
       if (s.id === "mixc") return pinIcon("#3E4C8A", "城");
       if (SAMS_LABEL[s.id]) return pinIcon("#8A4B08", SAMS_LABEL[s.id]);
+      if (s.id.startsWith("hotel-")) return pinIcon("#9B1FE8", "住");
       return pinIcon("#C23A2B", "吃");
     }
     function popupHtml(s) {
@@ -275,7 +281,7 @@
       });
     }
 
-    const chipOrder = ["all", "landmarks", ...CLUSTERS.map(c => c.id).filter(id => id !== "all" && id !== "landmarks")];
+    const chipOrder = ["all", "landmarks", "hotels-temp", ...CLUSTERS.map(c => c.id).filter(id => id !== "all" && id !== "landmarks" && id !== "hotels-temp")];
     chipOrder.forEach(id => {
       const cl = CLUSTERS.find(c => c.id === id);
       const b = document.createElement("button");
